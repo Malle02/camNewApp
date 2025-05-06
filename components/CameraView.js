@@ -1,32 +1,44 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useRef, forwardRef } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Camera } from 'expo-camera';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 
-const CameraView = (props) => {
-  const [hasPermission, setHasPermission] = useState(null);
+const Camera = forwardRef((props, ref) => {
+  const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef(null);
 
   useEffect(() => {
-    (async () => {
-      const { status } = await Camera.requestCameraPermissionsAsync();
-      setHasPermission(status === 'granted');
-    })();
+    requestPermission();
   }, []);
 
-  if (hasPermission === null) {
+  React.useImperativeHandle(ref, () => ({
+    takePictureAsync: async (options) => {
+      if (cameraRef.current) {
+        return cameraRef.current.takePictureAsync(options);
+      }
+      return null;
+    }
+  }));
+
+  if (permission === null) {
     return <View style={styles.container}><Text>Chargement de la caméra...</Text></View>;
   }
   
-  if (hasPermission === false) {
+  if (!permission?.granted) {
     return <View style={styles.container}><Text>Pas d'accès à la caméra</Text></View>;
   }
 
   return (
     <View style={[styles.container, props.style]}>
-      <Text>Caméra</Text>
+      <CameraView
+        style={styles.camera}
+        facing={props.type || 'back'}
+        flash={props.flash || 'off'}
+        ref={cameraRef}
+        onCameraReady={props.onCameraReady}
+      />
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -34,7 +46,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'black',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  camera: {
+    flex: 1,
+    width: '100%',
   }
 });
 
-export default CameraView;
+export default Camera;
