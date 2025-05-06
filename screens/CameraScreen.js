@@ -7,16 +7,25 @@ import { addPhoto } from '../redux/photosSlice';
 import { addLocationToPhoto } from '../utils/permissions';
 
 const CameraScreen = ({ navigation }) => {
+  // État pour le type de caméra : 'back' ou 'front'
   const [type, setType] = useState('back');
+  // État pour le flash : 'off', 'on', 'auto'
   const [flash, setFlash] = useState('off');
+  // État indiquant si la caméra est prête
   const [cameraReady, setCameraReady] = useState(false);
+
+  // Référence au composant CameraView pour appeler takePictureAsync
   const cameraRef = useRef(null);
+
+  // Hook Redux pour dispatcher des actions
   const dispatch = useDispatch();
 
+  // Permet de basculer entre la caméra avant et arrière
   const toggleCameraType = () => {
     setType(current => (current === 'back' ? 'front' : 'back'));
   };
 
+  // Permet de changer le mode du flash de manière cyclique
   const toggleFlash = () => {
     setFlash(current => {
       switch (current) {
@@ -28,30 +37,34 @@ const CameraScreen = ({ navigation }) => {
     });
   };
 
+  // Callback appelé lorsque la caméra est prête à l'utilisation
   const onCameraReady = useCallback(() => {
     setCameraReady(true);
   }, []);
 
+  // Fonction pour capturer une photo
   const takePicture = async () => {
+    // Vérifie que la caméra est prête et que la référence est définie
     if (!cameraReady || !cameraRef.current) return;
-    
+
     try {
+      // Capture de la photo avec des options
       const photo = await cameraRef.current.takePictureAsync({
         quality: 0.8,
         base64: false,
         skipProcessing: false
       });
-      
+
+      // Ajout des métadonnées de localisation à la photo
       const photoWithLocation = await addLocationToPhoto({
         uri: photo.uri,
         id: Date.now() + '-' + Math.random().toString(36).substring(2, 9),
         createdAt: new Date().toISOString(),
       });
-      
-     
+
+      // Envoi de la photo au store Redux
       dispatch(addPhoto(photoWithLocation));
-      
-    
+
     } catch (error) {
       console.error('Erreur lors de la prise de photo:', error);
     }
@@ -60,6 +73,8 @@ const CameraScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar hidden />
+      
+      {/* Composant caméra */}
       <CameraView 
         style={styles.camera}
         type={type}
@@ -67,9 +82,11 @@ const CameraScreen = ({ navigation }) => {
         ref={cameraRef}
         onCameraReady={onCameraReady}
       />
-      
+
+      {/* Interface de contrôle */}
       <View style={styles.controlsContainer}>
         <View style={styles.controls}>
+          {/* Bouton pour changer le mode flash */}
           <TouchableOpacity style={styles.button} onPress={toggleFlash}>
             <Ionicons 
               name={
@@ -84,6 +101,7 @@ const CameraScreen = ({ navigation }) => {
             />
           </TouchableOpacity>
 
+          {/* Bouton de capture */}
           <TouchableOpacity 
             style={[styles.captureButton, !cameraReady && styles.disabledButton]} 
             onPress={takePicture}
@@ -92,6 +110,7 @@ const CameraScreen = ({ navigation }) => {
             <View style={styles.captureButtonInner} />
           </TouchableOpacity>
 
+          {/* Bouton pour inverser la caméra */}
           <TouchableOpacity style={styles.button} onPress={toggleCameraType}>
             <Ionicons name="camera-reverse-outline" size={24} color="white" />
           </TouchableOpacity>
@@ -101,6 +120,7 @@ const CameraScreen = ({ navigation }) => {
   );
 };
 
+// Styles pour l'écran de la caméra
 const styles = StyleSheet.create({
   container: {
     flex: 1,

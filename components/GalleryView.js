@@ -9,15 +9,18 @@ import {
 } from 'react-native';
 import PhotoItem from './PhotoItem';
 
+// Composant de galerie photo affichant une liste de photo
 const GalleryView = ({ 
-  photos, 
-  loading, 
-  onPhotoPress, 
-  onPhotoLongPress, 
-  selectedPhotos, 
-  selectionMode,
-  onRefresh 
+  photos,             // Tableau des objets photo à afficher
+  loading,            // Booléen indiquant si le chargement est en cours
+  onPhotoPress,       // Callback lorsqu'on appuie sur une photo
+  onPhotoLongPress,   // Callback lors d'un appui long sur une photo
+  selectedPhotos,     // Tableau des IDs de photos sélectionnées
+  selectionMode,      // Booléen indiquant si la sélection multiple est active
+  onRefresh           // Callback pour rafraîchir la galerie
 }) => {
+
+  // Affichage du chargement
   if (loading) {
     return (
       <View style={styles.centerContainer}>
@@ -27,6 +30,7 @@ const GalleryView = ({
     );
   }
 
+  // Affichage lorsque aucune photo n'est disponible
   if (photos.length === 0) {
     return (
       <View style={styles.centerContainer}>
@@ -38,22 +42,24 @@ const GalleryView = ({
     );
   }
 
+  // Affichage de la galerie sous forme de grille 
   return (
     <FlatList
-      data={photos}
-      keyExtractor={(item) => item.id}
-      numColumns={3}
+      data={photos} // Données à afficher
+      keyExtractor={(item) => item.id} // Clé unique pour chaque élément
+      numColumns={3} // Nombre de colonnes dans la grille
       renderItem={({ item }) => (
         <PhotoItem
           photo={item}
           onPress={() => onPhotoPress(item)}
           onLongPress={() => onPhotoLongPress(item)}
-          selected={selectedPhotos.includes(item.id)}
-          selectionMode={selectionMode}
+          selected={selectedPhotos.includes(item.id)} // Indique si la photo est sélectionnée
+          selectionMode={selectionMode} // Active les styles de sélection
         />
       )}
       contentContainerStyle={styles.photosList}
       refreshControl={
+        // Permet le pull to refresh
         <RefreshControl
           refreshing={loading}
           onRefresh={onRefresh}
@@ -65,6 +71,7 @@ const GalleryView = ({
   );
 };
 
+// Styles pour l'affichage de la galerie
 const styles = StyleSheet.create({
   photosList: {
     padding: 2,
